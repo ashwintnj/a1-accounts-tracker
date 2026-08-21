@@ -17,6 +17,8 @@ const HistoryPage = () => {
     const [deleteTargetDate, setDeleteTargetDate] = useState('');
     const [deleteText, setDeleteText] = useState('');
     const [deleteTextError, setDeleteTextError] = useState('');
+    const [searchDate, setSearchDate] = useState('');
+    const [filterType, setFilterType] = useState('all'); // all, positive, negative
 
     const loadRecords = async () => {
         setLoading(true);
@@ -79,15 +81,66 @@ const HistoryPage = () => {
         );
     }
 
+    // Filter records based on search and filter criteria
+    const filteredRecords = records.filter((record) => {
+        // Date search filter
+        if (searchDate && !record.date.includes(searchDate)) {
+            return false;
+        }
+        // Sales filter
+        const sales = calculateSales(record);
+        if (filterType === 'positive' && sales <= 0) return false;
+        if (filterType === 'negative' && sales >= 0) return false;
+        return true;
+    });
+
     return (
         <div className="space-y-4">
             <div className="card">
                 <h1 className="text-lg font-semibold text-slate-900">History</h1>
                 <p className="text-sm text-slate-600">Click a record to view/edit. Recent {records.length} records shown.</p>
+
+                {/* Search and Filter Section */}
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label className="label">Search by Date</label>
+                        <input
+                            type="date"
+                            className="input"
+                            value={searchDate}
+                            onChange={(e) => setSearchDate(e.target.value)}
+                            placeholder="Search date..."
+                        />
+                    </div>
+                    <div>
+                        <label className="label">Filter by Sales</label>
+                        <select
+                            className="input"
+                            value={filterType}
+                            onChange={(e) => setFilterType(e.target.value)}
+                        >
+                            <option value="all">All Records</option>
+                            <option value="positive">Positive Sales Only</option>
+                            <option value="negative">Negative Sales Only</option>
+                        </select>
+                    </div>
+                </div>
+                {(searchDate || filterType !== 'all') && (
+                    <div className="mt-2 flex items-center gap-2">
+                        <span className="text-sm text-slate-600">Showing {filteredRecords.length} of {records.length} records</span>
+                        <button
+                            type="button"
+                            className="text-sm text-brand hover:underline"
+                            onClick={() => { setSearchDate(''); setFilterType('all'); }}
+                        >
+                            Clear Filters
+                        </button>
+                    </div>
+                )}
             </div>
 
             <div className="space-y-2">
-                {records.map((record) => {
+                {filteredRecords.map((record) => {
                     const sales = calculateSales(record);
                     const expense = toNumber(record.todayExpense);
                     const cih = toNumber(record.todayCashInHand);

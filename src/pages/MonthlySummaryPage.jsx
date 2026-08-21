@@ -16,6 +16,8 @@ const MonthlySummaryPage = () => {
     const [month, setMonth] = useState(getCurrentMonth());
     const [records, setRecords] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [searchDate, setSearchDate] = useState('');
+    const [minSales, setMinSales] = useState('');
 
     useEffect(() => {
         const load = async () => {
@@ -27,17 +29,26 @@ const MonthlySummaryPage = () => {
         load();
     }, [month]);
 
-    const summaryData = records.map((record) => {
-        const sales = calculateSales(record);
-        const expense = toNumber(record.todayExpense);
-        const cih = toNumber(record.todayCashInHand);
-        return {
-            date: record.date,
-            sales,
-            expense,
-            cih
-        };
-    });
+    const summaryData = records
+        .map((record) => {
+            const sales = calculateSales(record);
+            const expense = toNumber(record.todayExpense);
+            const cih = toNumber(record.todayCashInHand);
+            return {
+                date: record.date,
+                sales,
+                expense,
+                cih
+            };
+        })
+        .filter((item) => {
+            // Date search filter
+            if (searchDate && item.date !== searchDate) return false;
+            // Min sales filter
+            if (minSales && item.sales < toNumber(minSales)) return false;
+            return true;
+        })
+        .sort((a, b) => b.date.localeCompare(a.date));
 
     const monthlySales = summaryData.reduce((sum, item) => sum + toNumber(item.sales), 0);
     const monthlyExpense = summaryData.reduce((sum, item) => sum + toNumber(item.expense), 0);
@@ -46,16 +57,46 @@ const MonthlySummaryPage = () => {
         <div className="space-y-4">
             <div className="card">
                 <h1 className="text-lg font-semibold text-slate-900">Monthly Summary</h1>
-                <div className="mt-3">
-                    <label className="label">Select Month</label>
-                    <input
-                        type="month"
-                        className="input"
-                        value={month}
-                        onChange={(event) => setMonth(event.target.value)}
-                        max={getCurrentMonth()}
-                    />
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label className="label">Select Month</label>
+                        <input
+                            type="month"
+                            className="input"
+                            value={month}
+                            onChange={(event) => setMonth(event.target.value)}
+                            max={getCurrentMonth()}
+                        />
+                    </div>
+                    <div>
+                        <label className="label">Search by Date</label>
+                        <input
+                            type="date"
+                            className="input"
+                            value={searchDate}
+                            onChange={(e) => setSearchDate(e.target.value)}
+                        />
+                    </div>
+                    {/* <div>
+                        <label className="label">Min Sales (₹)</label>
+                        <input
+                            type="number"
+                            className="input"
+                            value={minSales}
+                            onChange={(e) => setMinSales(e.target.value)}
+                            placeholder="0"
+                        />
+                    </div> */}
                 </div>
+                {(searchDate || minSales) && (
+                    <button
+                        type="button"
+                        className="mt-2 text-sm text-brand hover:underline"
+                        onClick={() => { setSearchDate(''); setMinSales(''); }}
+                    >
+                        Clear Filters
+                    </button>
+                )}
             </div>
 
             {loading ? (
@@ -92,7 +133,7 @@ const MonthlySummaryPage = () => {
                             {summaryData.map((item) => (
                                 <Link
                                     key={item.date}
-                                    to={`/entry/${item.date}?mode=view`}
+                                    to={`/entry/${item.date}?mode=view&tab=sales`}
                                     className="block rounded-lg border border-slate-200 p-3 hover:bg-slate-50"
                                 >
                                     <div className="flex items-center justify-between mb-2">

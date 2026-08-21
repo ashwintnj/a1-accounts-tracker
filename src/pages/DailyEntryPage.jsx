@@ -23,7 +23,8 @@ const createEmptyRecord = () => ({
     moneyBeforeScreenshot: '',
     todayExpense: '',
     todayCashInHand: '',
-    previousDayCashInHand: ''
+    previousDayCashInHand: '',
+    notes: ''
 });
 
 const STEP_TITLES = {
@@ -52,7 +53,7 @@ const DailyEntryPage = () => {
     const [showEditWarning, setShowEditWarning] = useState(false);
     const [previousDayCIHFetched, setPreviousDayCIHFetched] = useState(false);
     const [currentStep, setCurrentStep] = useState(1);
-    const [activeTab, setActiveTab] = useState('accounts');
+    const [activeTab, setActiveTab] = useState(searchParams.get('tab') === 'sales' ? 'sales' : 'accounts');
 
     const isOldDate = currentDate !== todayDateString();
     const isViewMode = searchParams.get('mode') === 'view';
@@ -563,6 +564,17 @@ const DailyEntryPage = () => {
                                 <span className="rounded-full bg-white/20 px-2 py-1">Expense: {formatINR(todayExpense)}</span>
                                 <span className="rounded-full bg-white/20 px-2 py-1">Cash-in-Hand: {formatINR(todayCashInHand)}</span>
                             </div>
+                        </div>
+
+                        <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                            <label className="mb-2 block text-sm font-semibold text-slate-700">Notes (Optional)</label>
+                            <textarea
+                                value={record.notes || ''}
+                                onChange={(event) => updateField('notes', event.target.value)}
+                                placeholder="Add any notes here..."
+                                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
+                                rows={3}
+                            />
                         </div>
 
                         <button onClick={handleSave} disabled={saving || isViewMode} className="w-full rounded-xl bg-emerald-600 py-2.5 font-semibold text-white disabled:opacity-50">{saving ? 'Saving...' : 'Save Record'}</button>
