@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import NumberInput from '../components/NumberInput';
 import { useAuth } from '../lib/AuthContext';
 import { calculateDaily, getFinalDirectionText } from '../lib/calculations';
@@ -39,6 +39,7 @@ const STEP_TITLES = {
 
 const DailyEntryPage = () => {
     const { date: paramDate } = useParams();
+    const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const { user } = useAuth();
 
@@ -54,6 +55,7 @@ const DailyEntryPage = () => {
     const [activeTab, setActiveTab] = useState('accounts');
 
     const isOldDate = currentDate !== todayDateString();
+    const isViewMode = searchParams.get('mode') === 'view';
 
     useEffect(() => {
         const loadRecord = async () => {
@@ -145,6 +147,10 @@ const DailyEntryPage = () => {
     };
 
     const handleSave = async () => {
+        if (isViewMode) {
+            return;
+        }
+
         if (isOldDate && !showEditWarning) {
             setShowEditWarning(true);
             return;
@@ -169,7 +175,7 @@ const DailyEntryPage = () => {
         const newDate = event.target.value;
         setCurrentDate(newDate);
         setCurrentStep(1);
-        navigate(`/entry/${newDate}`, { replace: true });
+        navigate(`/entry/${newDate}${isViewMode ? '?mode=view' : ''}`, { replace: true });
     };
 
     const canProceed = () => {
@@ -224,7 +230,11 @@ const DailyEntryPage = () => {
                 <div className="flex items-center justify-between gap-3">
                     <div>
                         <h1 className="text-xl font-bold">Daily Entry</h1>
-                        {isEditing && <p className="text-xs text-blue-100">Editing existing record</p>}
+                        {isViewMode ? (
+                            <p className="text-xs text-blue-100">View mode (read-only)</p>
+                        ) : isEditing ? (
+                            <p className="text-xs text-blue-100">Editing existing record</p>
+                        ) : null}
                     </div>
                     <input
                         type="date"
@@ -284,7 +294,7 @@ const DailyEntryPage = () => {
                         </div>
                     </div>
 
-                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <fieldset disabled={isViewMode} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm disabled:opacity-95">
                         <h2 className="mb-3 text-base font-bold text-slate-900">{STEP_TITLES[currentStep]}</h2>
 
                         {currentStep === 1 && (
@@ -459,21 +469,21 @@ const DailyEntryPage = () => {
                                 </div>
                             </div>
                         )}
-                    </div>
+                    </fieldset>
 
                     <div className="flex gap-2">
                         <button onClick={prevStep} disabled={currentStep === 1} className="flex-1 rounded-xl border border-slate-300 bg-white py-2.5 font-semibold text-slate-700 disabled:opacity-50">Back</button>
                         {currentStep < 8 ? (
                             <button onClick={nextStep} disabled={!canProceed()} className="flex-1 rounded-xl bg-brand py-2.5 font-semibold text-white disabled:opacity-50">Next</button>
                         ) : (
-                            <button onClick={handleSave} disabled={saving} className="flex-1 rounded-xl bg-emerald-600 py-2.5 font-semibold text-white disabled:opacity-50">{saving ? 'Saving...' : 'Save Record'}</button>
+                            <button onClick={handleSave} disabled={saving || isViewMode} className="flex-1 rounded-xl bg-emerald-600 py-2.5 font-semibold text-white disabled:opacity-50">{saving ? 'Saving...' : 'Save Record'}</button>
                         )}
                     </div>
                 </>
             )}
 
             {activeTab === 'sales' && (
-                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <fieldset disabled={isViewMode} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm disabled:opacity-95">
                     <h2 className="mb-3 text-lg font-bold text-slate-900">Sales</h2>
                     <div className="space-y-3">
                         <div className="rounded-xl border border-red-100 bg-red-50 p-3">
@@ -501,9 +511,9 @@ const DailyEntryPage = () => {
                             </div>
                         </div>
 
-                        <button onClick={handleSave} disabled={saving} className="w-full rounded-xl bg-emerald-600 py-2.5 font-semibold text-white disabled:opacity-50">{saving ? 'Saving...' : 'Save Record'}</button>
+                        <button onClick={handleSave} disabled={saving || isViewMode} className="w-full rounded-xl bg-emerald-600 py-2.5 font-semibold text-white disabled:opacity-50">{saving ? 'Saving...' : 'Save Record'}</button>
                     </div>
-                </div>
+                </fieldset>
             )}
 
             {message && (
@@ -512,7 +522,7 @@ const DailyEntryPage = () => {
                 </div>
             )}
 
-            {showEditWarning && (
+            {showEditWarning && !isViewMode && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
                     <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
                         <h3 className="text-lg font-bold text-amber-700">Editing Old Record</h3>

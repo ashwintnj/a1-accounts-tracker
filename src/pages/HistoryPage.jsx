@@ -14,6 +14,9 @@ const HistoryPage = () => {
     const [records, setRecords] = useState([]);
     const [loading, setLoading] = useState(true);
     const [deleting, setDeleting] = useState(null);
+    const [deleteTargetDate, setDeleteTargetDate] = useState('');
+    const [deleteText, setDeleteText] = useState('');
+    const [deleteTextError, setDeleteTextError] = useState('');
 
     const loadRecords = async () => {
         setLoading(true);
@@ -26,14 +29,34 @@ const HistoryPage = () => {
         loadRecords();
     }, []);
 
-    const handleDelete = async (date) => {
-        if (!confirm(`Are you sure you want to delete the record for ${date}? This cannot be undone.`)) {
+    const openDeleteConfirm = (date) => {
+        setDeleteTargetDate(date);
+        setDeleteText('');
+        setDeleteTextError('');
+    };
+
+    const closeDeleteConfirm = () => {
+        setDeleteTargetDate('');
+        setDeleteText('');
+        setDeleteTextError('');
+    };
+
+    const handleDelete = async () => {
+        if (deleteText !== 'DELETE') {
+            setDeleteTextError('Type DELETE exactly to continue.');
             return;
         }
+
+        const date = deleteTargetDate;
+        if (!date) {
+            return;
+        }
+
         setDeleting(date);
         try {
             await deleteDailyRecord(date);
             setRecords((prev) => prev.filter((record) => record.date !== date));
+            closeDeleteConfirm();
         } catch (error) {
             alert('Failed to delete: ' + (error.message || 'Unknown error'));
         } finally {
@@ -70,7 +93,7 @@ const HistoryPage = () => {
                     const cih = toNumber(record.todayCashInHand);
                     return (
                         <div key={record.id} className="card flex items-center justify-between gap-3">
-                            <Link to={`/entry/${record.date}`} className="flex-1 hover:text-brand">
+                            <div className="flex-1">
                                 <div className="flex items-center justify-between mb-2">
                                     <p className="font-medium text-slate-900">{record.date}</p>
                                     <p className="font-bold text-emerald-600">Sales: {formatINR(sales)}</p>
@@ -79,19 +102,74 @@ const HistoryPage = () => {
                                     <span className="text-red-600">Expense: {formatINR(expense)}</span>
                                     <span className="text-violet-600">CIH: {formatINR(cih)}</span>
                                 </div>
-                            </Link>
-                            <button
-                                type="button"
-                                className="btn-light px-2 py-1 text-red-600 text-sm"
-                                onClick={() => handleDelete(record.date)}
-                                disabled={deleting === record.date}
-                            >
-                                {deleting === record.date ? '...' : 'Del'}
-                            </button>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Link to={`/entry/${record.date}?mode=view`} className="btn-light px-3 py-1 text-sm">
+                                    View
+                                </Link>
+                                <Link to={`/entry/${record.date}?mode=edit`} className="btn-primary px-3 py-1 text-sm">
+                                    Edit
+                                </Link>
+                                <button
+                                    type="button"
+                                    className="rounded-lg bg-red-600 px-3 py-1 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+                                    onClick={() => openDeleteConfirm(record.date)}
+                                    disabled={deleting === record.date}
+                                >
+                                    {deleting === record.date ? 'Deleting...' : 'Delete'}
+                                </button>
+                            </div>
                         </div>
                     );
                 })}
             </div>
+
+            {deleteTargetDate && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                    <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl">
+                        <h3 className="text-lg font-semibold text-red-700">Delete Old Data</h3>
+                        <p className="mt-2 text-sm text-slate-600">
+                            You are deleting the record for <span className="font-semibold">{deleteTargetDate}</span>. This cannot be undone.
+                        </p>
+                        <p className="mt-2 text-sm text-slate-600">
+                            If you wish to continue, type <span className="font-bold text-red-700">DELETE</span> below.
+                        </p>
+
+                        <input
+                            className="mt-3 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-200"
+                            value={deleteText}
+                            onChange={(event) => {
+                                setDeleteText(event.target.value);
+                                if (deleteTextError) {
+                                    setDeleteTextError('');
+                                }
+                            }}
+                            placeholder="Type DELETE"
+                        />
+
+                        {deleteTextError && <p className="mt-2 text-sm text-red-600">{deleteTextError}</p>}
+
+                        <div className="mt-4 flex gap-2">
+                            <button
+                                type="button"
+                                className="flex-1 rounded-lg bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+                                onClick={handleDelete}
+                                disabled={deleting === deleteTargetDate}
+                            >
+                                {deleting === deleteTargetDate ? 'Deleting...' : 'Confirm Delete'}
+                            </button>
+                            <button
+                                type="button"
+                                className="flex-1 rounded-lg bg-slate-100 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-200"
+                                onClick={closeDeleteConfirm}
+                                disabled={deleting === deleteTargetDate}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
