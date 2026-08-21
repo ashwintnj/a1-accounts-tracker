@@ -1,0 +1,99 @@
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { formatINR, toNumber } from '../lib/format';
+import { deleteDailyRecord, listRecentRecords } from '../lib/firestore';
+
+const calculateSales = (record) => {
+    const expense = toNumber(record.todayExpense);
+    const todayCIH = toNumber(record.todayCashInHand);
+    const prevCIH = toNumber(record.previousDayCashInHand);
+    return expense + todayCIH - prevCIH;
+};
+
+const HistoryPage = () => {
+    const [records, setRecords] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [deleting, setDeleting] = useState(null);
+
+    const loadRecords = async () => {
+        setLoading(true);
+        const data = await listRecentRecords(100);
+        setRecords(data);
+        setLoading(false);
+    };
+
+    useEffect(() => {
+        loadRecords();
+    }, []);
+
+    const handleDelete = async (date) => {
+        if (!confirm(`Are you sure you want to delete the record for ${date}? This cannot be undone.`)) {
+            return;
+        }
+        setDeleting(date);
+        try {
+            await deleteDailyRecord(date);
+            setRecords((prev) => prev.filter((record) => record.date !== date));
+        } catch (error) {
+            alert('Failed to delete: ' + (error.message || 'Unknown error'));
+        } finally {
+            setDeleting(null);
+        }
+    };
+
+    if (loading) {
+        return <div className="card text-center text-slate-600">Loading history...</div>;
+    }
+
+    if (records.length === 0) {
+        return (
+            <div className="card text-center">
+                <p className="text-slate-600">No records found.</p>
+                <Link to="/entry" className="btn-primary mt-3 inline-block">
+                    Create First Entry
+                </Link>
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-4">
+            <div className="card">
+                <h1 className="text-lg font-semibold text-slate-900">History</h1>
+                <p className="text-sm text-slate-600">Click a record to view/edit. Recent {records.length} records shown.</p>
+            </div>
+
+            <div className="space-y-2">
+                {records.map((record) => {
+                    const sales = calculateSales(record);
+                    const expense = toNumber(record.todayExpense);
+                    const cih = toNumber(record.todayCashInHand);
+                    return (
+                        <div key={record.id} className="card flex items-center justify-between gap-3">
+                            <Link to={`/entry/${record.date}`} className="flex-1 hover:text-brand">
+                                <div className="flex items-center justify-between mb-2">
+                                    <p className="font-medium text-slate-900">{record.date}</p>
+                                    <p className="font-bold text-emerald-600">Sales: {formatINR(sales)}</p>
+                                </div>
+                                <div className="flex gap-4 text-xs">
+                                    <span className="text-red-600">Expense: {formatINR(expense)}</span>
+                                    <span className="text-violet-600">CIH: {formatINR(cih)}</span>
+                                </div>
+                            </Link>
+                            <button
+                                type="button"
+                                className="btn-light px-2 py-1 text-red-600 text-sm"
+                                onClick={() => handleDelete(record.date)}
+                                disabled={deleting === record.date}
+                            >
+                                {deleting === record.date ? '...' : 'Del'}
+                            </button>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+};
+
+export default HistoryPage;
