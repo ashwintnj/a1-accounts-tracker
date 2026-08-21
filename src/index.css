@@ -6,6 +6,10 @@
     font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 }
 
+body {
+    @apply bg-slate-50 text-slate-900;
+}
+
 /* Disable scroll wheel on number inputs */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {

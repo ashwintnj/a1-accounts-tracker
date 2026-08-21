@@ -16,20 +16,22 @@ const Layout = ({ children }) => {
     };
 
     return (
-        <div className="mx-auto min-h-screen max-w-4xl px-4 pb-24 pt-4">
+        <div className="mx-auto min-h-screen max-w-4xl px-4 pb-24 pt-4 text-slate-900">
             <header className="mb-4 rounded-xl bg-brand p-4 text-white shadow">
                 <div className="flex items-center justify-between gap-3">
                     <Link to="/" className="text-lg font-semibold">
                         A1 Shop Accounts
                     </Link>
-                    <button type="button" onClick={handleSignOut} className="btn bg-white/15 text-white hover:bg-white/25">
-                        Logout
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button type="button" onClick={handleSignOut} className="btn bg-white/15 text-white hover:bg-white/25">
+                            Logout
+                        </button>
+                    </div>
                 </div>
                 <p className="mt-1 text-xs text-blue-100">{user?.email}</p>
             </header>
 
-            <nav className="mb-4 flex flex-wrap gap-2 rounded-xl bg-white p-2 shadow-sm border border-slate-200">
+            <nav className="mb-4 flex flex-wrap gap-2 rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
                 <NavLink to="/" className={navClass} end>
                     Home
                 </NavLink>

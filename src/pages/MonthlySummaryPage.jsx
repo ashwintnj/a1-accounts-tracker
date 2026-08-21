@@ -92,7 +92,7 @@ const MonthlySummaryPage = () => {
                             {summaryData.map((item) => (
                                 <Link
                                     key={item.date}
-                                    to={`/entry/${item.date}`}
+                                    to={`/entry/${item.date}?mode=view`}
                                     className="block rounded-lg border border-slate-200 p-3 hover:bg-slate-50"
                                 >
                                     <div className="flex items-center justify-between mb-2">
@@ -101,7 +101,7 @@ const MonthlySummaryPage = () => {
                                     </div>
                                     <div className="flex gap-4 text-xs">
                                         <span className="text-red-600">Expense: {formatINR(item.expense)}</span>
-                                        <span className="text-violet-600">CIH: {formatINR(item.cih)}</span>
+                                        <span className="text-violet-600">Cash-in-Hand: {formatINR(item.cih)}</span>
                                     </div>
                                 </Link>
                             ))}

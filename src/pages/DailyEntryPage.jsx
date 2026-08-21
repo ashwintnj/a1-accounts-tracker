@@ -96,6 +96,13 @@ const DailyEntryPage = () => {
     const todayCashInHand = toNumber(record.todayCashInHand);
     const previousDayCashInHandVal = toNumber(record.previousDayCashInHand);
     const calculatedSales = todayExpense + todayCashInHand - previousDayCashInHandVal;
+    const moneySentA = toNumber(record.moneySentA);
+    const rechargeGreatB1 = toNumber(record.rechargeDoneGr);
+    const rechargeEgB2 = toNumber(record.rechargeDoneEg);
+    const gpayBusinessAmount = toNumber(record.gpayBusiness);
+    const aepsAmount = toNumber(record.aeps);
+    const step7GpayBusinessAndAeps = gpayBusinessAmount + aepsAmount;
+    const tab7Total = step7GpayBusinessAndAeps + toNumber(record.moneyBeforeScreenshot);
 
     const updateField = (field, value) => setRecord((prev) => ({ ...prev, [field]: value }));
 
@@ -308,7 +315,10 @@ const DailyEntryPage = () => {
                                                 onChange={(event) => handleBankUpdate(bank.id, 'name', event.target.value)}
                                                 placeholder="Bank name"
                                             />
-                                            <button onClick={() => handleBankRemove(bank.id)} className="rounded-lg bg-red-100 px-3 py-2 text-red-700">×</button>
+                                            <button onClick={() => handleBankRemove(bank.id)} className="rounded-lg bg-red-100 px-3 py-2 text-red-700">
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+
+                                            </button>
                                         </div>
                                         <NumberInput value={bank.opening} onChange={(value) => handleBankUpdate(bank.id, 'opening', value)} placeholder="Opening Balance" />
                                     </div>
@@ -363,14 +373,24 @@ const DailyEntryPage = () => {
                         {currentStep === 4 && (
                             <div className="space-y-3">
                                 {record.moneyReceivedEntries.map((entry) => (
-                                    <div key={entry.id} className="flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50/60 p-3">
-                                        <input
-                                            value={entry.label}
-                                            onChange={(event) => handleReceivedUpdate(entry.id, 'label', event.target.value)}
-                                            className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-                                        />
-                                        <NumberInput value={entry.amount} onChange={(value) => handleReceivedUpdate(entry.id, 'amount', value)} className="w-28" placeholder="0" />
-                                        <button onClick={() => handleReceivedRemove(entry.id)} className="rounded-lg bg-red-100 px-3 py-2 text-red-700">×</button>
+                                    <div key={entry.id} className="rounded-xl border border-emerald-100 bg-emerald-50/60 p-3">
+                                        <div className="flex items-end gap-2">
+                                            <div className="w-[20%]">
+                                                <label className="mb-1 block text-xs text-emerald-600">Name</label>
+                                                <input
+                                                    value={entry.label}
+                                                    onChange={(event) => handleReceivedUpdate(entry.id, 'label', event.target.value)}
+                                                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm h-10"
+                                                />
+                                            </div>
+                                            <div className="w-[70%]">
+                                                <label className="mb-1 block text-xs text-emerald-600">Amount</label>
+                                                <NumberInput value={entry.amount} onChange={(value) => handleReceivedUpdate(entry.id, 'amount', value)} className="w-full h-10" placeholder="0" />
+                                            </div>
+                                            <button onClick={() => handleReceivedRemove(entry.id)} className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-100 text-red-700 hover:bg-red-200" title="Delete">
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                            </button>
+                                        </div>
                                     </div>
                                 ))}
                                 <button onClick={handleReceivedAdd} className="w-full rounded-xl border border-dashed border-emerald-300 bg-emerald-50 py-2.5 text-sm font-semibold text-emerald-700">+ Add Entry</button>
@@ -388,24 +408,21 @@ const DailyEntryPage = () => {
                         {currentStep === 5 && (
                             <div className="space-y-3">
                                 <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm">
-                                    <div className="grid grid-cols-[1fr_auto_auto] items-center gap-2">
+                                    <div className="flex items-center justify-between gap-2">
                                         <span>Opening Balance - Closing Balance</span>
                                         <strong>{formatINR(computed.overallBalanceX)}</strong>
-                                        <span className="font-bold text-amber-700">X</span>
                                     </div>
                                 </div>
                                 <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm">
-                                    <div className="grid grid-cols-[1fr_auto_auto] items-center gap-2">
+                                    <div className="flex items-center justify-between gap-2">
                                         <span>Total Gpay Recieved (D)</span>
-                                        <strong>{formatINR(computed.totalMoneyReceivedD)}</strong>
-                                        <span className="font-bold text-amber-700">+</span>
+                                        <div className="flex items-center gap-1"><span className="font-bold text-amber-700">+</span><strong>{formatINR(computed.totalMoneyReceivedD)}</strong></div>
                                     </div>
                                 </div>
                                 <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm">
-                                    <div className="grid grid-cols-[1fr_auto_auto] items-center gap-2">
+                                    <div className="flex items-center justify-between gap-2">
                                         <span>Tally</span>
-                                        <strong>{formatINR(computed.tallyLeft)}</strong>
-                                        <span className="font-bold text-amber-700">=</span>
+                                        <div className="flex items-center gap-1"><span className="font-bold text-amber-700">=</span><strong>{formatINR(computed.tallyLeft)}</strong></div>
                                     </div>
                                 </div>
                                 <div className={`rounded-xl p-4 text-center text-white ${computed.tallyMatched ? 'bg-emerald-600' : 'bg-red-600'}`}>
@@ -448,19 +465,56 @@ const DailyEntryPage = () => {
                                     <label className="mb-2 block text-sm font-semibold text-teal-700">Money Before Screenshot</label>
                                     <NumberInput value={record.moneyBeforeScreenshot} onChange={(value) => updateField('moneyBeforeScreenshot', value)} placeholder="0" />
                                 </div>
+                                <div className="rounded-xl bg-teal-600 p-3 text-center text-white">
+                                    <p className="text-xs text-teal-100">Total (GPay Business + AEPS + Money Before Screenshot)</p>
+                                    <p className="text-2xl font-bold">{formatINR(tab7Total)}</p>
+                                </div>
                             </div>
                         )}
 
                         {currentStep === 8 && (
                             <div className="space-y-3">
-                                <div className="grid grid-cols-2 gap-3 text-sm">
-                                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3"><p className="text-slate-500">A (UPI Money Sent)</p><p className="font-bold">{formatINR(toNumber(record.moneySentA))}</p></div>
-                                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3"><p className="text-slate-500">B (Recharge Add Total)</p><p className="font-bold">{formatINR(computed.totalRechargeAddB)}</p></div>
-                                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3"><p className="text-slate-500">C (Total Debited)</p><p className="font-bold">{formatINR(computed.totalDebitedC)}</p></div>
-                                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3"><p className="text-slate-500">D (Total Gpay Recieved)</p><p className="font-bold">{formatINR(computed.totalMoneyReceivedD)}</p></div>
-                                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3"><p className="text-slate-500">E (Recharge Done Total)</p><p className="font-bold">{formatINR(computed.totalRechargesE)}</p></div>
-                                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3"><p className="text-slate-500">F (Extra Recieved)</p><p className="font-bold">{formatINR(computed.extraReceivedF)}</p></div>
-                                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 col-span-2"><p className="text-slate-500">G (A + E)</p><p className="font-bold">{formatINR(computed.debitRealG)}</p></div>
+                                <div className="space-y-2 text-sm">
+                                    <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                                        <div className="rounded-md bg-white border border-slate-100 px-2 py-2 space-y-1">
+                                            <div className="flex items-center justify-between py-0.5">
+                                                <p className="text-slate-700">Gpay Money Sent (A)</p>
+                                                <p className="font-bold text-slate-900">{formatINR(moneySentA)}</p>
+                                            </div>
+                                            <div className="flex items-center justify-between py-0.5">
+                                                <p className="text-slate-700">Great Recharge (B1)</p>
+                                                <p className="font-bold text-slate-900">{formatINR(rechargeGreatB1)}</p>
+                                            </div>
+                                            <div className="flex items-center justify-between py-0.5">
+                                                <p className="text-slate-700">EG Payment (B2)</p>
+                                                <p className="font-bold text-slate-900">{formatINR(rechargeEgB2)}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-200">
+                                            <p className="text-slate-700">Total Debited (A + B1 + B2)</p>
+                                            <p className="font-bold text-slate-900">{formatINR(computed.debitRealG)}</p>
+                                        </div>
+                                    </div>
+                                    <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                                        <div className="flex items-center justify-between">
+                                            <p className="text-slate-700">Total Gpay Recieved (C)</p>
+                                            <p className="font-bold text-slate-900">{formatINR(computed.dTotal)}</p>
+                                        </div>
+                                        <div className="mt-2 rounded-md bg-slate-100 px-2.5 py-2 text-xs text-slate-600">
+                                            <div className="flex items-center justify-between py-0.5">
+                                                <p>Gpay Recieved Total</p>
+                                                <p className="font-semibold text-slate-700">{formatINR(computed.totalMoneyReceivedD)}</p>
+                                            </div>
+                                            <div className="flex items-center justify-between py-0.5">
+                                                <p>Gpay Business</p>
+                                                <p className="font-semibold text-slate-700">{formatINR(gpayBusinessAmount)}</p>
+                                            </div>
+                                            <div className="flex items-center justify-between py-0.5">
+                                                <p>AEPS</p>
+                                                <p className="font-semibold text-slate-700">{formatINR(aepsAmount)}</p>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div className={`rounded-xl p-5 text-center text-white ${computed.finalAmount >= 0 ? 'bg-emerald-600' : 'bg-amber-600'}`}>
                                     <p className="text-xs opacity-90">Final Amount</p>
@@ -496,7 +550,7 @@ const DailyEntryPage = () => {
                         </div>
                         <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                             <div className="mb-2 flex items-center justify-between">
-                                <label className="text-sm font-semibold text-slate-700">Previous Day CIH</label>
+                                <label className="text-sm font-semibold text-slate-700">Previous Day Cash-in-Hand</label>
                                 {previousDayCIHFetched && <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-700">Auto</span>}
                             </div>
                             <NumberInput value={record.previousDayCashInHand} onChange={(value) => updateField('previousDayCashInHand', value)} placeholder="0" />
@@ -507,7 +561,7 @@ const DailyEntryPage = () => {
                             <p className="text-3xl font-bold">{formatINR(calculatedSales)}</p>
                             <div className="mt-2 flex justify-center gap-2 text-xs">
                                 <span className="rounded-full bg-white/20 px-2 py-1">Expense: {formatINR(todayExpense)}</span>
-                                <span className="rounded-full bg-white/20 px-2 py-1">CIH: {formatINR(todayCashInHand)}</span>
+                                <span className="rounded-full bg-white/20 px-2 py-1">Cash-in-Hand: {formatINR(todayCashInHand)}</span>
                             </div>
                         </div>
 

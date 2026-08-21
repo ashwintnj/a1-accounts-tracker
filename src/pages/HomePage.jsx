@@ -56,7 +56,7 @@ const HomePage = () => {
                         return (
                             <Link
                                 key={record.id}
-                                to={`/entry/${record.date}`}
+                                to={`/entry/${record.date}?mode=view`}
                                 className="block rounded-lg border border-slate-200 p-3 hover:bg-slate-50"
                             >
                                 <div className="flex items-center justify-between mb-2">
@@ -65,7 +65,7 @@ const HomePage = () => {
                                 </div>
                                 <div className="flex gap-4 text-xs">
                                     <span className="text-red-600">Expense: {formatINR(expense)}</span>
-                                    <span className="text-violet-600">CIH: {formatINR(cih)}</span>
+                                    <span className="text-violet-600">Cash-in-Hand: {formatINR(cih)}</span>
                                 </div>
                             </Link>
                         );

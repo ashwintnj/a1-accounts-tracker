@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
+import PwaUpdatePrompt from './components/PwaUpdatePrompt';
 import { AuthProvider, useAuth } from './lib/AuthContext';
 import DailyEntryPage from './pages/DailyEntryPage';
 import HistoryPage from './pages/HistoryPage';
@@ -73,6 +74,7 @@ const App = () => {
         <AuthProvider>
             <BrowserRouter>
                 <AppRoutes />
+                <PwaUpdatePrompt />
             </BrowserRouter>
         </AuthProvider>
     );
