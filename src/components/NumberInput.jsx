@@ -3,8 +3,22 @@ const NumberInput = ({ value, onChange, placeholder = '0', className = '', ...pr
         event.target.blur();
     };
 
+    const handleFocus = (event) => {
+        const current = String(value ?? '');
+        if (current === '0') {
+            event.target.select();
+        }
+    };
+
     const handleChange = (event) => {
-        onChange(event.target.value);
+        const rawValue = event.target.value;
+        if (rawValue === '') {
+            onChange('');
+            return;
+        }
+
+        const normalizedValue = /^0\d+/.test(rawValue) ? rawValue.replace(/^0+/, '') || '0' : rawValue;
+        onChange(normalizedValue);
     };
 
     return (
@@ -13,6 +27,7 @@ const NumberInput = ({ value, onChange, placeholder = '0', className = '', ...pr
             className={`input ${className}`}
             value={value}
             onChange={handleChange}
+            onFocus={handleFocus}
             onWheel={handleWheel}
             placeholder={placeholder}
             min="0"

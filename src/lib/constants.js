@@ -5,4 +5,4 @@ export const DEFAULT_BANKS = [
     { id: crypto.randomUUID(), name: 'Bank of Baroda', opening: 0, closing: 0 }
 ];
 
-export const DEFAULT_RECEIVED_LABEL = 'Ash';
+export const DEFAULT_RECEIVED_LABEL = 'GPAY';

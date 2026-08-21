@@ -17,6 +17,16 @@ input[type="number"] {
     -moz-appearance: textfield;
 }
 
+/* Hide scrollbar but allow scrolling */
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
 .card {
     @apply rounded-xl bg-white p-4 shadow-sm border border-slate-200;
 }
