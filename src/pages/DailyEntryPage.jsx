@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import NumberInput from '../components/NumberInput';
+import ScreenshotScanner from '../components/ScreenshotScanner';
 import { useAuth } from '../lib/AuthContext';
 import { calculateDaily, getFinalDirectionText } from '../lib/calculations';
 import { DEFAULT_BANKS, DEFAULT_RECEIVED_LABEL } from '../lib/constants';
@@ -306,6 +307,22 @@ const DailyEntryPage = () => {
 
                         {currentStep === 1 && (
                             <div className="space-y-3">
+                                {!isViewMode && (
+                                    <ScreenshotScanner
+                                        mode="opening"
+                                        onApply={(ocrResults) => {
+                                            setRecord((prev) => ({
+                                                ...prev,
+                                                banks: prev.banks.map((bank) => {
+                                                    const match = ocrResults.find((r) =>
+                                                        bank.name.includes(r.suffix)
+                                                    );
+                                                    return match ? { ...bank, opening: match.amount } : bank;
+                                                })
+                                            }));
+                                        }}
+                                    />
+                                )}
                                 {record.banks.map((bank) => (
                                     <div key={bank.id} className="rounded-xl border border-blue-100 bg-blue-50/60 p-3">
                                         <div className="mb-2 flex items-center gap-2">
@@ -333,6 +350,22 @@ const DailyEntryPage = () => {
 
                         {currentStep === 2 && (
                             <div className="space-y-3">
+                                {!isViewMode && (
+                                    <ScreenshotScanner
+                                        mode="closing"
+                                        onApply={(ocrResults) => {
+                                            setRecord((prev) => ({
+                                                ...prev,
+                                                banks: prev.banks.map((bank) => {
+                                                    const match = ocrResults.find((r) =>
+                                                        bank.name.includes(r.suffix)
+                                                    );
+                                                    return match ? { ...bank, closing: match.amount } : bank;
+                                                })
+                                            }));
+                                        }}
+                                    />
+                                )}
                                 {record.banks.map((bank) => (
                                     <div key={bank.id} className="rounded-xl border border-indigo-100 bg-indigo-50/60 p-3">
                                         <p className="mb-2 text-sm font-semibold text-slate-800">{bank.name}</p>

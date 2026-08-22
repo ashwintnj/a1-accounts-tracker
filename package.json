@@ -1,7 +1,7 @@
 {
     "name": "a1-shop-accounts",
     "private": true,
-    "version": "1.0.0",
+    "version": "1.2.0",
     "type": "module",
     "scripts": {
         "dev": "vite",
@@ -12,7 +12,8 @@
         "firebase": "^11.1.0",
         "react": "^18.3.1",
         "react-dom": "^18.3.1",
-        "react-router-dom": "^6.28.0"
+        "react-router-dom": "^6.28.0",
+        "tesseract.js": "^7.0.0"
     },
     "devDependencies": {
         "@vitejs/plugin-react": "^4.3.2",
