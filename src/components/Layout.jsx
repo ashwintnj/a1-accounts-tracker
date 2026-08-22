@@ -8,7 +8,7 @@ const Layout = ({ children }) => {
         <div className="mx-auto min-h-screen max-w-4xl px-4 pb-24 pt-4 font-sans text-slate-900">
             <header className="mb-4 rounded-xl bg-gradient-to-r from-brand to-blue-700 p-4 text-white shadow-lg">
                 <div className="flex items-center gap-3">
-                    <img src="/a1_logo.png" alt="A1 Logo" className="h-10 w-10 rounded-lg bg-white p-1" />
+                    <img src="/a1_logo.png" alt="A1 Logo" className="h-9 w-9 rounded-lg bg-white p-1.5 object-contain shadow-sm" />
                     <Link to="/" className="brand-title text-2xl leading-none sm:text-3xl">
                         A1 Maligai - Accounts
                     </Link>

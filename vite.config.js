@@ -9,11 +9,11 @@ export default defineConfig({
             registerType: 'autoUpdate',
             includeAssets: ['a1_logo.png'],
             manifest: {
-                name: 'A1 Maligai - Accounts',
-                short_name: 'A1 Maligai',
+                name: 'A1-Accounts',
+                short_name: 'A1-Accounts',
                 description: 'Daily shop accounts calculator with synced records',
                 theme_color: '#1e40af',
-                background_color: '#f8fafc',
+                background_color: '#1e40af',
                 display: 'standalone',
                 start_url: '/',
                 icons: [
