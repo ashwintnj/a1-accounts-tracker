@@ -122,7 +122,7 @@ const LoginPage = () => {
                 className={`w-full rounded-2xl border p-6 shadow ${isLoginMode ? 'border-blue-200 bg-white' : 'border-emerald-200 bg-emerald-50/30'}`}
             >
                 <div className="mb-4 flex items-center justify-between">
-                    <h1 className="text-2xl font-semibold text-brand">A1 Shop Accounts</h1>
+                    <h1 className="brand-title text-3xl text-brand">A1 Maligai - Accounts</h1>
                 </div>
 
                 <div className="mb-4 grid grid-cols-2 gap-2 rounded-xl bg-slate-100 p-1">

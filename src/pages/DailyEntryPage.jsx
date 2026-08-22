@@ -237,7 +237,7 @@ const DailyEntryPage = () => {
             <div className="rounded-2xl bg-gradient-to-r from-brand to-blue-700 p-4 text-white shadow-lg">
                 <div className="flex items-center justify-between gap-3">
                     <div>
-                        <h1 className="text-xl font-bold">Daily Entry</h1>
+                        <h1 className="text-xl font-bold tracking-tight">Daily Entry</h1>
                         {isViewMode ? (
                             <p className="text-xs text-blue-100">View mode (read-only)</p>
                         ) : isEditing ? (
@@ -248,7 +248,6 @@ const DailyEntryPage = () => {
                         type="date"
                         value={currentDate}
                         onChange={handleDateChange}
-                        max={todayDateString()}
                         className="rounded-xl border-0 bg-white/90 px-3 py-2 text-sm font-semibold text-slate-700"
                     />
                 </div>
@@ -258,13 +257,13 @@ const DailyEntryPage = () => {
                 <div className="grid grid-cols-2 gap-1">
                     <button
                         onClick={() => setActiveTab('accounts')}
-                        className={`rounded-xl py-2.5 text-sm font-semibold ${activeTab === 'accounts' ? 'bg-gradient-to-r from-brand to-blue-700 text-white' : 'text-slate-700 hover:bg-slate-100'}`}
+                        className={`rounded-xl py-2.5 text-sm font-bold tracking-tight ${activeTab === 'accounts' ? 'bg-gradient-to-r from-brand to-blue-700 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-100'}`}
                     >
                         Tab 1 • Accounts
                     </button>
                     <button
                         onClick={() => setActiveTab('sales')}
-                        className={`rounded-xl py-2.5 text-sm font-semibold ${activeTab === 'sales' ? 'bg-gradient-to-r from-emerald-600 to-green-700 text-white' : 'text-slate-700 hover:bg-slate-100'}`}
+                        className={`rounded-xl py-2.5 text-sm font-bold tracking-tight ${activeTab === 'sales' ? 'bg-gradient-to-r from-brand to-blue-700 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-100'}`}
                     >
                         Tab 2 • Sales
                     </button>
@@ -376,7 +375,7 @@ const DailyEntryPage = () => {
                                 {record.moneyReceivedEntries.map((entry) => (
                                     <div key={entry.id} className="rounded-xl border border-emerald-100 bg-emerald-50/60 p-3">
                                         <div className="flex items-end gap-2">
-                                            <div className="w-[20%]">
+                                            <div className="w-[30%]">
                                                 <label className="mb-1 block text-xs text-emerald-600">Name</label>
                                                 <input
                                                     value={entry.label}
@@ -384,7 +383,7 @@ const DailyEntryPage = () => {
                                                     className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm h-10"
                                                 />
                                             </div>
-                                            <div className="w-[70%]">
+                                            <div className="w-[60%]">
                                                 <label className="mb-1 block text-xs text-emerald-600">Amount</label>
                                                 <NumberInput value={entry.amount} onChange={(value) => handleReceivedUpdate(entry.id, 'amount', value)} className="w-full h-10" placeholder="0" />
                                             </div>
