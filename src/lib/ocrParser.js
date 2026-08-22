@@ -24,10 +24,46 @@ export function parseAmount(raw) {
 
 /**
  * Amount regex — matches Indian number formats.
- * Also handles OCR misreads: ₹ often reads as %, &, #, etc.
- * e.g. "%43,395.97", "27,750.31", "₹13,910.65"
+ * Also handles OCR misreads: ₹ often reads as %, &, #, 2, etc.
+ * e.g. "%43,395.97", "27,750.31", "₹13,910.65", "243,395.97" (₹ misread as 2)
  */
-const AMOUNT_REGEX = /(?:[₹%&$#Rs\.INR]+\s*)?(\d{1,3}(?:,\d{2,3})*(?:\.\d{1,2})?)/g;
+const AMOUNT_REGEX = /(?:[₹%&$#@*Rs\.INR]+\s*)?(\d{1,3}(?:,\d{2,3})*(?:\.\d{1,2})?)/g;
+
+/**
+ * Clean a balance line to fix common OCR misreads of the ₹ symbol.
+ * 
+ * Based on analysis of 7 real Paytm screenshots, OCR reads ₹ as:
+ * - '%' or '¥' → clearly symbols, strip them
+ * - '2' → looks like digit but is fake, strip it
+ * 
+ * Pattern: ₹ always appears directly before the number in Paytm.
+ * 
+ * Examples from real OCR output:
+ *   "%14,564.97" → strip % → "14,564.97"
+ *   "¥28,158.47" → strip ¥ → "28,158.47"  
+ *   "27,750.31"  → ₹ read as 2 → strip 2 → "7,750.31"
+ *   "211,850.31" → ₹ read as 2 → strip 2 → "11,850.31"
+ *   "52,244.97"  → real amount, no ₹ prefix → keep as is
+ *   "8,302.46"   → real amount → keep as is
+ */
+function cleanBalanceLine(line) {
+    const s = line.trim();
+    
+    // 1. Strip known symbol misreads: %, ¥, &, $, #, @, *, ₹
+    const symbolStripped = s.replace(/^[₹%¥&$#@*]+\s*/, '');
+    if (symbolStripped !== s) return symbolStripped;
+    
+    // 2. ₹ misread as '2': if starts with 2 and rest is valid X,XXX or XX,XXX format
+    //    This specifically targets the common OCR misread where ₹ → 2
+    //    Matches: 2 + (1-2 digits) + comma + rest of number
+    //    e.g. "27,750.31" → "2" + "7,750.31" → return "7,750.31"
+    //    e.g. "211,850.31" → "2" + "11,850.31" → return "11,850.31"
+    //    But "52,244.97" doesn't match (starts with 5, not 2)
+    const twoPrefix = s.match(/^2(\d{1,2},\d{2,3}(?:,\d{3})*(?:\.\d{1,2})?)$/);
+    if (twoPrefix) return twoPrefix[1];
+    
+    return s;
+}
 
 /**
  * From OCR full text, extract balances for known 4-digit account suffixes.
@@ -71,7 +107,10 @@ export function parseBalancesFromOcrText(fullText) {
                 // Skip "check balance" lines — no amount to read
                 if (/check\s*balance/i.test(wLine)) continue;
 
-                const amountMatches = [...wLine.matchAll(AMOUNT_REGEX)];
+                // Clean the line to fix ₹ misread as digit/symbol (e.g. "243,395.97" → "43,395.97")
+                const cleanedLine = cleanBalanceLine(wLine);
+
+                const amountMatches = [...cleanedLine.matchAll(AMOUNT_REGEX)];
                 for (const m of amountMatches) {
                     // Remove commas and parse
                     const cleaned = m[1].replace(/,/g, '');
