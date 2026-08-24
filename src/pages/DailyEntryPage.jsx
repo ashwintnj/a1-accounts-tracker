@@ -40,6 +40,7 @@ const STEP_TITLES = {
 };
 
 const DailyEntryPage = () => {
+
     const { date: paramDate } = useParams();
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
@@ -61,9 +62,10 @@ const DailyEntryPage = () => {
 
     useEffect(() => {
         const loadRecord = async () => {
+            if (!user?.uid) return;
             setLoading(true);
-            const data = await getDailyRecord(currentDate);
-            const prevDayRecord = await getPreviousDayRecord(currentDate);
+            const data = await getDailyRecord(user.uid, currentDate);
+            const prevDayRecord = await getPreviousDayRecord(user.uid, currentDate);
 
             if (data) {
                 setRecord({
@@ -89,7 +91,7 @@ const DailyEntryPage = () => {
         };
 
         loadRecord();
-    }, [currentDate]);
+    }, [currentDate, user?.uid]);
 
     const computed = calculateDaily(record);
     const isTallyDone = computed.tallyMatched;
@@ -159,7 +161,10 @@ const DailyEntryPage = () => {
         if (isViewMode) {
             return;
         }
-
+        if (!user?.uid) { // Safety check
+            setMessage('Error: You must be logged in to save.');
+            return;
+        }
         if (isOldDate && !showEditWarning) {
             setShowEditWarning(true);
             return;
@@ -169,7 +174,7 @@ const DailyEntryPage = () => {
         setMessage('');
 
         try {
-            await saveDailyRecord(currentDate, record, user?.email);
+            await saveDailyRecord(user.uid, currentDate, record, user?.email);
             setMessage('Saved successfully!');
             setShowEditWarning(false);
             setIsEditing(true);

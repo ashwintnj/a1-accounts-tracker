@@ -9,9 +9,19 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
+        const unsubscribe = onAuthStateChanged(auth, async (nextUser) => {
             setUser(nextUser);
             setLoading(false);
+            // Sync updated auth email to Firestore document
+            if (nextUser?.uid && nextUser?.email) {
+                try {
+                    await updateDoc(doc(db, 'users', nextUser.uid), {
+                        email: nextUser.email
+                    });
+                } catch {
+                    // Ignore non-critical sync errors on startup
+                }
+            }
         });
 
         return () => unsubscribe();

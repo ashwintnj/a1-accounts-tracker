@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { formatINR, toNumber } from '../lib/format';
 import { listMonthlyRecords } from '../lib/firestore';
+import { useAuth } from '../lib/AuthContext';
 
 const getCurrentMonth = () => new Date().toISOString().slice(0, 7);
 
@@ -13,6 +14,7 @@ const calculateSales = (record) => {
 };
 
 const MonthlySummaryPage = () => {
+    const { user } = useAuth();
     const [month, setMonth] = useState(getCurrentMonth());
     const [records, setRecords] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -21,13 +23,14 @@ const MonthlySummaryPage = () => {
 
     useEffect(() => {
         const load = async () => {
+            if (!user?.uid) return;
             setLoading(true);
-            const data = await listMonthlyRecords(month);
+            const data = await listMonthlyRecords(user.uid, month);
             setRecords(data);
             setLoading(false);
         };
         load();
-    }, [month]);
+    }, [user?.uid, month]);
 
     const summaryData = records
         .map((record) => {

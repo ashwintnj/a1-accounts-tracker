@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { formatINR, toNumber } from '../lib/format';
 import { deleteDailyRecord, listRecentRecords } from '../lib/firestore';
+import { useAuth } from '../lib/AuthContext';
 
 const calculateSales = (record) => {
     const expense = toNumber(record.todayExpense);
@@ -11,6 +12,7 @@ const calculateSales = (record) => {
 };
 
 const HistoryPage = () => {
+    const { user } = useAuth();
     const [records, setRecords] = useState([]);
     const [loading, setLoading] = useState(true);
     const [deleting, setDeleting] = useState(null);
@@ -21,15 +23,16 @@ const HistoryPage = () => {
     const [filterType, setFilterType] = useState('all'); // all, positive, negative
 
     const loadRecords = async () => {
+        if (!user?.uid) return;
         setLoading(true);
-        const data = await listRecentRecords(100);
+        const data = await listRecentRecords(user.uid, 100);
         setRecords(data);
         setLoading(false);
     };
 
     useEffect(() => {
         loadRecords();
-    }, []);
+    }, [user?.uid]);
 
     const openDeleteConfirm = (date) => {
         setDeleteTargetDate(date);
@@ -56,7 +59,7 @@ const HistoryPage = () => {
 
         setDeleting(date);
         try {
-            await deleteDailyRecord(date);
+            await deleteDailyRecord(user.uid, date);
             setRecords((prev) => prev.filter((record) => record.date !== date));
             closeDeleteConfirm();
         } catch (error) {

@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { formatINR, todayDateString, toNumber } from '../lib/format';
 import { listRecentRecords } from '../lib/firestore';
+import { useAuth } from '../lib/AuthContext';
+
 
 const calculateSales = (record) => {
     const expense = toNumber(record.todayExpense);
@@ -11,18 +13,22 @@ const calculateSales = (record) => {
 };
 
 const HomePage = () => {
+    const { user } = useAuth();
     const [records, setRecords] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const load = async () => {
+            if (!user?.uid) return;
             setLoading(true);
-            const data = await listRecentRecords(12);
+            const data = await listRecentRecords(user.uid, 12);
             setRecords(data);
             setLoading(false);
         };
         load();
-    }, []);
+    }, [user?.uid]);
+
+
 
     const today = todayDateString();
 
@@ -41,6 +47,8 @@ const HomePage = () => {
                     <Link to="/monthly-summary" className="btn-light">
                         Monthly Summary
                     </Link>
+
+
                 </div>
             </section>
 
@@ -77,3 +85,4 @@ const HomePage = () => {
 };
 
 export default HomePage;
+

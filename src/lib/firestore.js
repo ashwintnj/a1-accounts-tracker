@@ -13,11 +13,13 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 
-const DAILY_COLLECTION = 'dailyRecords';
+const getUserDailyDocRef = (userId, date) => doc(db, 'users', userId, 'dailyRecords', date);
+const getUserDailyColRef = (userId) => collection(db, 'users', userId, 'dailyRecords');
 
-export const getDailyRecord = async (date) => {
+export const getDailyRecord = async (userId, date) => {
+    if (!userId) return null;
     try {
-        const snap = await getDoc(doc(db, DAILY_COLLECTION, date));
+        const snap = await getDoc(getUserDailyDocRef(userId, date));
         return snap.exists() ? snap.data() : null;
     } catch (error) {
         console.error('Error fetching record:', error);
@@ -25,7 +27,8 @@ export const getDailyRecord = async (date) => {
     }
 };
 
-export const saveDailyRecord = async (date, data, userEmail) => {
+export const saveDailyRecord = async (userId, date, data, userEmail) => {
+    if (!userId) throw new Error('User not authenticated');
     try {
         const payload = {
             ...data,
@@ -33,32 +36,32 @@ export const saveDailyRecord = async (date, data, userEmail) => {
             updatedAt: serverTimestamp(),
             updatedBy: userEmail || 'unknown'
         };
-
-        const existing = await getDailyRecord(date);
+        const existing = await getDailyRecord(userId, date);
         if (!existing) {
             payload.createdAt = serverTimestamp();
             payload.createdBy = userEmail || 'unknown';
         }
-
-        await setDoc(doc(db, DAILY_COLLECTION, date), payload, { merge: true });
-        console.log('Record saved successfully:', date);
+        await setDoc(getUserDailyDocRef(userId, date), payload, { merge: true });
     } catch (error) {
         console.error('Error saving record:', error);
         throw error;
     }
 };
 
-export const deleteDailyRecord = async (date) => {
-    await deleteDoc(doc(db, DAILY_COLLECTION, date));
+export const deleteDailyRecord = async (userId, date) => {
+    if (!userId) return;
+    await deleteDoc(getUserDailyDocRef(userId, date));
 };
 
-export const listRecentRecords = async (count = 30) => {
-    const q = query(collection(db, DAILY_COLLECTION), orderBy('date', 'desc'), limit(count));
+export const listRecentRecords = async (userId, count = 30) => {
+    if (!userId) return [];
+    const q = query(getUserDailyColRef(userId), orderBy('date', 'desc'), limit(count));
     const snap = await getDocs(q);
     return snap.docs.map((item) => ({ id: item.id, ...item.data() }));
 };
 
-export const listMonthlyRecords = async (month) => {
+export const listMonthlyRecords = async (userId, month) => {
+    if (!userId) return [];
     const start = `${month}-01`;
     const [yearText, monthText] = month.split('-');
     const year = Number(yearText);
@@ -67,7 +70,7 @@ export const listMonthlyRecords = async (month) => {
     const end = nextMonthDate.toISOString().slice(0, 10);
 
     const q = query(
-        collection(db, DAILY_COLLECTION),
+        getUserDailyColRef(userId),
         where('date', '>=', start),
         where('date', '<', end),
         orderBy('date', 'asc')
@@ -76,9 +79,37 @@ export const listMonthlyRecords = async (month) => {
     return snap.docs.map((item) => ({ id: item.id, ...item.data() }));
 };
 
-export const getPreviousDayRecord = async (currentDate) => {
+export const getPreviousDayRecord = async (userId, currentDate) => {
     const date = new Date(currentDate);
     date.setDate(date.getDate() - 1);
     const previousDate = date.toISOString().slice(0, 10);
-    return getDailyRecord(previousDate);
+    return getDailyRecord(userId, previousDate);
+};
+
+
+
+export const transferRecordsFromOldUid = async (oldUid, newUid) => {
+    if (!oldUid || !newUid) throw new Error('Both Old UID and New UID are required');
+
+    // 1. Reference to the old user's subcollection
+    const oldColRef = collection(db, 'users', oldUid, 'dailyRecords');
+    const snap = await getDocs(oldColRef);
+
+    if (snap.empty) {
+        alert('No records found under the old UID!');
+        return;
+    }
+
+    // 2. Write each document under the new UID subcollection
+    let count = 0;
+    for (const docSnap of snap.docs) {
+        await setDoc(
+            doc(db, 'users', newUid, 'dailyRecords', docSnap.id),
+            docSnap.data(),
+            { merge: true }
+        );
+        count++;
+    }
+
+    alert(`Transferred ${count} records successfully!`);
 };
