@@ -322,7 +322,7 @@ const DailyEntryPage = () => {
                                                     const match = ocrResults.find((r) =>
                                                         bank.name.includes(r.suffix)
                                                     );
-                                                    return match ? { ...bank, opening: match.amount } : bank;
+                                                    return match ? { ...bank, opening: Math.floor(match.amount) } : bank;
                                                 })
                                             }));
                                         }}
@@ -365,7 +365,7 @@ const DailyEntryPage = () => {
                                                     const match = ocrResults.find((r) =>
                                                         bank.name.includes(r.suffix)
                                                     );
-                                                    return match ? { ...bank, closing: match.amount } : bank;
+                                                    return match ? { ...bank, closing: Math.floor(match.amount) } : bank;
                                                 })
                                             }));
                                         }}
