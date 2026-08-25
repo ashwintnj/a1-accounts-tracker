@@ -25,7 +25,8 @@ const createEmptyRecord = () => ({
     todayExpense: '',
     todayCashInHand: '',
     previousDayCashInHand: '',
-    notes: ''
+    notes: '',
+    tallyAdjustment: ''
 });
 
 const STEP_TITLES = {
@@ -463,6 +464,27 @@ const DailyEntryPage = () => {
                                         <div className="flex items-center gap-1"><span className="font-bold text-amber-700">=</span><strong>{formatINR(computed.tallyLeft)}</strong></div>
                                     </div>
                                 </div>
+
+                                {/* NEW: Tally Adjustment Box */}
+                                <div className="rounded-xl border border-blue-200 bg-blue-50 p-3">
+                                    <label className="mb-2 block text-sm font-semibold text-blue-800">Tally Adjustment (To Bypass)</label>
+                                    <input
+                                        type="number"
+                                        step="1"
+                                        className="input"
+                                        value={record.tallyAdjustment}
+                                        onWheel={(e) => e.target.blur()} // Disables mouse scroll changing values
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            // Automatically slices off any decimal typed
+                                            const noDecimals = val.includes('.') ? val.split('.')[0] : val;
+                                            updateField('tallyAdjustment', noDecimals);
+                                        }}
+                                        placeholder="Enter difference (e.g., 10 or -10)"
+                                    />
+                                    <p className="mt-1 text-xs text-blue-600">Enter a positive or negative amount to offset any mismatch</p>
+                                </div>
+
                                 <div className={`rounded-xl p-4 text-center text-white ${computed.tallyMatched ? 'bg-emerald-600' : 'bg-red-600'}`}>
                                     <p className="text-xs opacity-90">Should equal C (Debited)</p>
                                     <p className="text-2xl font-bold">{formatINR(computed.totalDebitedC)}</p>

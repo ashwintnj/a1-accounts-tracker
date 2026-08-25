@@ -19,8 +19,14 @@ export const calculateDaily = (record) => {
     const oldAeps = toNumber(record.oldAeps);
     const totalMoneyReceivedD = receivedEntriesTotal + oldAeps;
 
+    // NEW: Grab tally adjustment amount (can be positive or negative)
+    const tallyAdjustment = toNumber(record.tallyAdjustment);
+
     const tallyLeft = overallBalanceX + totalMoneyReceivedD;
-    const tallyDifference = tallyLeft - totalDebitedC;
+
+    // Add adjustment to the left side tally
+    const adjustedTallyLeft = tallyLeft + tallyAdjustment;
+    const tallyDifference = adjustedTallyLeft - totalDebitedC;
     const tallyMatched = Math.abs(tallyDifference) < 0.01;
 
     const rechargeDoneGr = toNumber(record.rechargeDoneGr);
@@ -46,6 +52,7 @@ export const calculateDaily = (record) => {
         oldAeps,
         totalMoneyReceivedD,
         tallyLeft,
+        adjustedTallyLeft,
         tallyDifference,
         tallyMatched,
         totalRechargesE,
@@ -61,7 +68,7 @@ export const getFinalDirectionText = (value) => {
         return 'Take this cash OUT from shop to yellow box';
     }
     if (value < 0) {
-        return 'Pay this cash INTO shop from yellow box';
+        return 'Pay this cash TO shop from yellow box';
     }
     return 'No cash movement needed';
 };
