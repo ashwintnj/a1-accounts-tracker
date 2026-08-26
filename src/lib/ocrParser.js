@@ -27,8 +27,8 @@ export function parseAmount(raw) {
  * Also handles OCR misreads: ₹ often reads as %, &, #, 2, etc.
  * e.g. "%43,395.97", "27,750.31", "₹13,910.65", "243,395.97" (₹ misread as 2)
  */
-const AMOUNT_REGEX = /(?:[₹%&$#@*Rs\.INR]+\s*)?(\d{1,3}(?:,\d{2,3})*(?:\.\d{1,2})?)/g;
-
+// const AMOUNT_REGEX = /(?:[₹%&$#@*Rs\.INR]+\s*)?(\d{1,3}(?:,\d{2,3})*(?:\.\d{1,2})?)/g;
+const AMOUNT_REGEX = /(?:[ %&$#@*₹Rs\.INR]+\s*)?(\d{1,3}(?:,\d{2,3})*(?:\.\d{1,2})?)(?!\d)/g;
 /**
  * Clean a balance line to fix common OCR misreads of the ₹ symbol.
  * 
@@ -48,11 +48,12 @@ const AMOUNT_REGEX = /(?:[₹%&$#@*Rs\.INR]+\s*)?(\d{1,3}(?:,\d{2,3})*(?:\.\d{1,
  */
 function cleanBalanceLine(line) {
     const s = line.trim();
-    
+
     // 1. Strip known symbol misreads: %, ¥, &, $, #, @, *, ₹
-    const symbolStripped = s.replace(/^[₹%¥&$#@*]+\s*/, '');
+    // const symbolStripped = s.replace(/^[₹%¥₹&$#@*]+\s*/, '');
+    const symbolStripped = s.replace(/^[ &$#@*₹]+\s*/, '');
     if (symbolStripped !== s) return symbolStripped;
-    
+
     // 2. ₹ misread as '2': if starts with 2 and rest is valid X,XXX or XX,XXX format
     //    This specifically targets the common OCR misread where ₹ → 2
     //    Matches: 2 + (1-2 digits) + comma + rest of number
@@ -61,7 +62,7 @@ function cleanBalanceLine(line) {
     //    But "52,244.97" doesn't match (starts with 5, not 2)
     const twoPrefix = s.match(/^2(\d{1,2},\d{2,3}(?:,\d{3})*(?:\.\d{1,2})?)$/);
     if (twoPrefix) return twoPrefix[1];
-    
+
     return s;
 }
 
@@ -107,6 +108,11 @@ export function parseBalancesFromOcrText(fullText) {
                 // Skip "check balance" lines — no amount to read
                 if (/check\s*balance/i.test(wLine)) continue;
 
+                // FIXED: Safety Break. If it accidentally drops to the next line 
+                // and sees a word like "Union" or "Bank", stop searching immediately!
+                if (/[a-zA-Z]{4,}/.test(wLine.replace(/check|balance|rs|inr/ig, ''))) {
+                    break;
+                }
                 // Clean the line to fix ₹ misread as digit/symbol (e.g. "243,395.97" → "43,395.97")
                 const cleanedLine = cleanBalanceLine(wLine);
 
@@ -116,7 +122,9 @@ export function parseBalancesFromOcrText(fullText) {
                     const cleaned = m[1].replace(/,/g, '');
                     const val = parseFloat(cleaned);
                     // Must be a meaningful balance (> 10) and not just the suffix itself
-                    if (!isNaN(val) && val > 10 && !wLine.replace(/[^0-9]/g, '').startsWith(suffix)) {
+                    // if (!isNaN(val) && val > 10 && !wLine.replace(/[^0-9]/g, '').startsWith(suffix)) {
+                    if (!isNaN(val) && val > 0 && !wLine.replace(/[^0-9]/g, '').startsWith(suffix)) {
+
                         bestAmount = val;
                         break;
                     }
