@@ -85,6 +85,7 @@ const ScreenshotScanner = ({ mode, onApply }) => {
                         className="hidden"
                         onChange={handleFileChange}
                     />
+
                     <button
                         type="button"
                         onClick={() => fileRef.current?.click()}
