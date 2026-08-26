@@ -113,3 +113,18 @@ export const transferRecordsFromOldUid = async (oldUid, newUid) => {
 
     alert(`Transferred ${count} records successfully!`);
 };
+
+// Fetch records within a specific date range
+export const listRecordsByDateRange = async (userId, startDate, endDate) => {
+    if (!userId || !startDate || !endDate) return [];
+
+    const q = query(
+        getUserDailyColRef(userId),
+        where('date', '>=', startDate),
+        where('date', '<=', endDate),
+        orderBy('date', 'desc') // Fetches newest first
+    );
+
+    const snap = await getDocs(q);
+    return snap.docs.map((item) => ({ id: item.id, ...item.data() }));
+};

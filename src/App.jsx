@@ -8,6 +8,7 @@ import HistoryPage from './pages/HistoryPage';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import MonthlySummaryPage from './pages/MonthlySummaryPage';
+import SummaryPage from './pages/SummaryPage';
 
 const AppRoutes = () => {
     const { user } = useAuth();
@@ -61,6 +62,16 @@ const AppRoutes = () => {
                     <ProtectedRoute>
                         <Layout>
                             <MonthlySummaryPage />
+                        </Layout>
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/summary"
+                element={
+                    <ProtectedRoute>
+                        <Layout>
+                            <SummaryPage />
                         </Layout>
                     </ProtectedRoute>
                 }

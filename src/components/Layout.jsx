@@ -139,6 +139,9 @@ const Layout = ({ children }) => {
                 <NavLink to="/monthly-summary" className={navClass}>
                     Monthly Summary
                 </NavLink>
+                <NavLink to="/summary" className={navClass}>
+                    Summary
+                </NavLink>
             </nav>
 
             <ChangeEmailModal

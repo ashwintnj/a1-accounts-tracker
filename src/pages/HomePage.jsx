@@ -47,6 +47,9 @@ const HomePage = () => {
                     <Link to="/monthly-summary" className="btn-light">
                         Monthly Summary
                     </Link>
+                    <Link to="/summary" className="btn-light">
+                        Summary
+                    </Link>
 
 
                 </div>
