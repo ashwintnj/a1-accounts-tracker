@@ -576,7 +576,7 @@ const DailyEntryPage = () => {
                                         </div>
                                     </div>
                                 </div>
-                                <div className={`rounded-xl p-5 text-center text-white ${computed.finalAmount >= 0 ? 'bg-emerald-600' : 'bg-amber-600'}`}>
+                                <div className={`rounded-xl p-5 text-center text-white ${computed.finalAmount >= 0 ? 'bg-emerald-600' : 'bg-red-600'}`}>
                                     <p className="text-xs opacity-90">Final Amount</p>
                                     <p className="text-3xl font-bold">{formatINR(Math.abs(computed.finalAmount))}</p>
                                     <p className="mt-1 text-sm">{getFinalDirectionText(computed.finalAmount)}</p>
