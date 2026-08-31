@@ -62,6 +62,8 @@ const DailyEntryPage = () => {
     const isViewMode = searchParams.get('mode') === 'view';
 
     useEffect(() => {
+
+
         const loadRecord = async () => {
             if (!user?.uid) return;
             setLoading(true);
@@ -80,10 +82,25 @@ const DailyEntryPage = () => {
                 });
                 setIsEditing(true);
             } else {
-                setRecord({
-                    ...createEmptyRecord(),
-                    previousDayCashInHand: prevDayRecord?.todayCashInHand || ''
-                });
+                const savedDraft = localStorage.getItem(`a1_draft_${currentDate}`);
+                const savedStep = localStorage.getItem(`a1_step_${currentDate}`);
+
+                if (savedDraft) {
+                    try {
+                        setRecord(JSON.parse(savedDraft));
+                        if (savedStep) setCurrentStep(Number(savedStep));
+                    } catch {
+                        setRecord({
+                            ...createEmptyRecord(),
+                            previousDayCashInHand: prevDayRecord?.todayCashInHand || ''
+                        });
+                    }
+                } else {
+                    setRecord({
+                        ...createEmptyRecord(),
+                        previousDayCashInHand: prevDayRecord?.todayCashInHand || ''
+                    });
+                }
                 setIsEditing(false);
             }
 
@@ -93,6 +110,17 @@ const DailyEntryPage = () => {
 
         loadRecord();
     }, [currentDate, user?.uid]);
+
+    //autosave in local
+    useEffect(() => {
+        if (loading || isViewMode) return;
+        try {
+            localStorage.setItem(`a1_draft_${currentDate}`, JSON.stringify(record));
+            localStorage.setItem(`a1_step_${currentDate}`, currentStep.toString());
+        } catch (err) {
+            console.error('Failed to auto-save draft locally:', err);
+        }
+    }, [record, currentStep, currentDate, loading, isViewMode]);
 
     const computed = calculateDaily(record);
     const isTallyDone = computed.tallyMatched;
@@ -176,6 +204,10 @@ const DailyEntryPage = () => {
 
         try {
             await saveDailyRecord(user.uid, currentDate, record, user?.email);
+            // Clear local draft after successful upload
+            localStorage.removeItem(`a1_draft_${currentDate}`);
+            localStorage.removeItem(`a1_step_${currentDate}`);
+
             setMessage('Saved successfully!');
             setShowEditWarning(false);
             setIsEditing(true);
@@ -488,7 +520,8 @@ const DailyEntryPage = () => {
                                 <div className={`rounded-xl p-4 text-center text-white ${computed.tallyMatched ? 'bg-emerald-600' : 'bg-red-600'}`}>
                                     <p className="text-xs opacity-90">Should equal C (Debited)</p>
                                     <p className="text-2xl font-bold">{formatINR(computed.totalDebitedC)}</p>
-                                    {computed.tallyMatched ? <p className="mt-1 text-sm font-semibold">[OK] Tally Matched</p> : <p className="mt-1 text-sm font-semibold">[X] Mismatch: {formatINR(computed.tallyDifference)}</p>}
+                                    {computed.tallyMatched ? <p className="mt-1 text-sm font-semibold">[OK] Tally Matched</p> : <p className="mt-1 text-sm font-semibold">{`[X] Mismatch: ${formatINR(computed.tallyDifference)} 
+                                    (${computed.tallyDifference > 0 ? 'Debited extra' : 'Credited extra'})`}</p>}
                                 </div>
                                 {!computed.tallyMatched && <p className="rounded-lg bg-red-50 px-3 py-2 text-center text-xs font-semibold text-red-700">Complete tally to unlock step 6, 7 and 8</p>}
                             </div>
