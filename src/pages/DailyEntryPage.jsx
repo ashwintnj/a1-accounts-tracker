@@ -40,6 +40,29 @@ const STEP_TITLES = {
     8: 'Result'
 };
 
+// Looks back up to 30 days to find the last non-zero Cash-in-Hand
+const fetchLastNonZeroCashInHand = async (uid, baseDateStr) => {
+    let checkDate = new Date(baseDateStr);
+
+    for (let i = 0; i < 30; i++) {
+        checkDate.setDate(checkDate.getDate() - 1);
+
+        // Format safely to local YYYY-MM-DD
+        const year = checkDate.getFullYear();
+        const month = String(checkDate.getMonth() + 1).padStart(2, '0');
+        const day = String(checkDate.getDate()).padStart(2, '0');
+        const prevDateStr = `${year}-${month}-${day}`;
+
+        const record = await getDailyRecord(uid, prevDateStr);
+        const cashVal = Number(record?.todayCashInHand || 0);
+
+        if (cashVal > 0) {
+            return cashVal;
+        }
+    }
+    return ''; // Returns empty if no non-zero data found in the last 30 days
+};
+
 const DailyEntryPage = () => {
 
     const { date: paramDate } = useParams();
@@ -67,8 +90,9 @@ const DailyEntryPage = () => {
         const loadRecord = async () => {
             if (!user?.uid) return;
             setLoading(true);
+
             const data = await getDailyRecord(user.uid, currentDate);
-            const prevDayRecord = await getPreviousDayRecord(user.uid, currentDate);
+            const lastCashInHand = await fetchLastNonZeroCashInHand(user.uid, currentDate);
 
             if (data) {
                 setRecord({
@@ -78,7 +102,7 @@ const DailyEntryPage = () => {
                     moneyReceivedEntries: data.moneyReceivedEntries?.length
                         ? data.moneyReceivedEntries
                         : [{ id: generateId(), label: DEFAULT_RECEIVED_LABEL, amount: '' }],
-                    previousDayCashInHand: data.previousDayCashInHand || prevDayRecord?.todayCashInHand || ''
+                    previousDayCashInHand: data.previousDayCashInHand || lastCashInHand || ''
                 });
                 setIsEditing(true);
             } else {
@@ -87,26 +111,74 @@ const DailyEntryPage = () => {
 
                 if (savedDraft) {
                     try {
-                        setRecord(JSON.parse(savedDraft));
+                        const parsed = JSON.parse(savedDraft);
+                        setRecord({
+                            ...parsed,
+                            previousDayCashInHand: parsed.previousDayCashInHand || lastCashInHand || ''
+                        });
                         if (savedStep) setCurrentStep(Number(savedStep));
                     } catch {
                         setRecord({
                             ...createEmptyRecord(),
-                            previousDayCashInHand: prevDayRecord?.todayCashInHand || ''
+                            previousDayCashInHand: lastCashInHand || ''
                         });
                     }
                 } else {
                     setRecord({
                         ...createEmptyRecord(),
-                        previousDayCashInHand: prevDayRecord?.todayCashInHand || ''
+                        previousDayCashInHand: lastCashInHand || ''
                     });
                 }
                 setIsEditing(false);
             }
 
-            setPreviousDayCIHFetched(!!prevDayRecord?.todayCashInHand);
+            setPreviousDayCIHFetched(!!lastCashInHand);
             setLoading(false);
         };
+
+        // const loadRecord = async () => {
+        //     if (!user?.uid) return;
+        //     setLoading(true);
+        //     const data = await getDailyRecord(user.uid, currentDate);
+        //     const prevDayRecord = await getPreviousDayRecord(user.uid, currentDate);
+
+        //     if (data) {
+        //         setRecord({
+        //             ...createEmptyRecord(),
+        //             ...data,
+        //             banks: data.banks || DEFAULT_BANKS.map((bank) => ({ ...bank, id: generateId() })),
+        //             moneyReceivedEntries: data.moneyReceivedEntries?.length
+        //                 ? data.moneyReceivedEntries
+        //                 : [{ id: generateId(), label: DEFAULT_RECEIVED_LABEL, amount: '' }],
+        //             previousDayCashInHand: data.previousDayCashInHand || prevDayRecord?.todayCashInHand || ''
+        //         });
+        //         setIsEditing(true);
+        //     } else {
+        //         const savedDraft = localStorage.getItem(`a1_draft_${currentDate}`);
+        //         const savedStep = localStorage.getItem(`a1_step_${currentDate}`);
+
+        //         if (savedDraft) {
+        //             try {
+        //                 setRecord(JSON.parse(savedDraft));
+        //                 if (savedStep) setCurrentStep(Number(savedStep));
+        //             } catch {
+        //                 setRecord({
+        //                     ...createEmptyRecord(),
+        //                     previousDayCashInHand: prevDayRecord?.todayCashInHand || ''
+        //                 });
+        //             }
+        //         } else {
+        //             setRecord({
+        //                 ...createEmptyRecord(),
+        //                 previousDayCashInHand: prevDayRecord?.todayCashInHand || ''
+        //             });
+        //         }
+        //         setIsEditing(false);
+        //     }
+
+        //     setPreviousDayCIHFetched(!!prevDayRecord?.todayCashInHand);
+        //     setLoading(false);
+        // };
 
         loadRecord();
     }, [currentDate, user?.uid]);
