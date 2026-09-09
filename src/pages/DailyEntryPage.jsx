@@ -678,12 +678,16 @@ const DailyEntryPage = () => {
                                                 <p>AEPS</p>
                                                 <p className="font-semibold text-slate-700">{formatINR(aepsAmount)}</p>
                                             </div>
+                                            <div className="flex items-center justify-between py-0.5">
+                                                <p>Money before Screenshot</p>
+                                                <p className="font-semibold text-slate-700">{formatINR(record.moneyBeforeScreenshot)}</p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                                 <div className={`rounded-xl p-5 text-center text-white ${computed.finalAmount >= 0 ? 'bg-emerald-600' : 'bg-red-600'}`}>
                                     <p className="text-xs opacity-90">Final Amount</p>
-                                    <p className="text-3xl font-bold">{formatINR(Math.abs(computed.finalAmount))}</p>
+                                    <p className="text-3xl font-bold">{formatINR(computed.finalAmount)}</p>
                                     <p className="mt-1 text-sm">{getFinalDirectionText(computed.finalAmount)}</p>
                                 </div>
                             </div>
