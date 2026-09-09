@@ -40,6 +40,7 @@ const STEP_TITLES = {
     8: 'Result'
 };
 
+
 // Looks back up to 30 days to find the last non-zero Cash-in-Hand
 const fetchLastNonZeroCashInHand = async (uid, baseDateStr) => {
     let checkDate = new Date(baseDateStr);
@@ -70,6 +71,7 @@ const DailyEntryPage = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
 
+    const [copied, setCopied] = useState(false);
     const [currentDate, setCurrentDate] = useState(paramDate || todayDateString());
     const [record, setRecord] = useState(createEmptyRecord());
     const [loading, setLoading] = useState(true);
@@ -209,6 +211,49 @@ const DailyEntryPage = () => {
     const step7GpayBusinessAndAeps = gpayBusinessAmount + aepsAmount;
     const tab7Total = step7GpayBusinessAndAeps + toNumber(record.moneyBeforeScreenshot);
 
+    const handleCopySales = async (e) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        const textToCopy = `Exp - ${todayExpense}\nSales - ${calculatedSales}\nCih - ${todayCashInHand}`;
+
+        const triggerCopiedState = () => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        };
+
+        // Primary modern method
+        if (navigator?.clipboard?.writeText) {
+            try {
+                await navigator.clipboard.writeText(textToCopy);
+                triggerCopiedState();
+                return;
+            } catch (err) {
+                console.warn('Clipboard API failed, attempting fallback...', err);
+            }
+        }
+
+        // Reliable fallback for mobile & non-secure HTTP contexts
+        try {
+            const textArea = document.createElement('textarea');
+            textArea.value = textToCopy;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-9999px';
+            textArea.style.top = '0';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            const successful = document.execCommand('copy');
+            document.body.removeChild(textArea);
+            if (successful) {
+                triggerCopiedState();
+            }
+        } catch (fallbackErr) {
+            console.error('Copy fallback failed:', fallbackErr);
+        }
+    };
     const updateField = (field, value) => setRecord((prev) => ({ ...prev, [field]: value }));
 
     const handleBankUpdate = (id, field, value) => {
@@ -706,26 +751,59 @@ const DailyEntryPage = () => {
             )}
 
             {activeTab === 'sales' && (
-                <fieldset disabled={isViewMode} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm disabled:opacity-95">
+                /* 1. Use a standard div container so utility buttons (like Copy) always work */
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                     <h2 className="mb-3 text-lg font-bold text-slate-900">Sales</h2>
                     <div className="space-y-3">
                         <div className="rounded-xl border border-red-100 bg-red-50 p-3">
                             <label className="mb-2 block text-sm font-semibold text-red-700">Today's Total Expense</label>
-                            <NumberInput value={record.todayExpense} onChange={(value) => updateField('todayExpense', value)} placeholder="0" />
+                            {/* 2. Prevent user input while in view mode */}
+                            <NumberInput
+                                value={record.todayExpense}
+                                onChange={(value) => !isViewMode && updateField('todayExpense', value)}
+                                placeholder="0"
+                            />
                         </div>
+
                         <div className="rounded-xl border border-violet-100 bg-violet-50 p-3">
                             <label className="mb-2 block text-sm font-semibold text-violet-700">Today's Cash In Hand</label>
-                            <NumberInput value={record.todayCashInHand} onChange={(value) => updateField('todayCashInHand', value)} placeholder="0" />
+                            <NumberInput
+                                value={record.todayCashInHand}
+                                onChange={(value) => !isViewMode && updateField('todayCashInHand', value)}
+                                placeholder="0"
+                            />
                         </div>
+
                         <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                             <div className="mb-2 flex items-center justify-between">
                                 <label className="text-sm font-semibold text-slate-700">Previous Day Cash-in-Hand</label>
                                 {previousDayCIHFetched && <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-700">Auto</span>}
                             </div>
-                            <NumberInput value={record.previousDayCashInHand} onChange={(value) => updateField('previousDayCashInHand', value)} placeholder="0" />
+                            <NumberInput
+                                value={record.previousDayCashInHand}
+                                onChange={(value) => !isViewMode && updateField('previousDayCashInHand', value)}
+                                placeholder="0"
+                            />
                         </div>
 
-                        <div className="rounded-xl bg-emerald-600 p-5 text-center text-white">
+                        {/* Sales Card & Copy Button (Always clickable) */}
+                        <div className="relative rounded-xl bg-emerald-600 p-5 text-center text-white">
+                            <button
+                                onClick={handleCopySales}
+                                type="button"
+                                className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-lg bg-white/20 text-white transition-colors hover:bg-white/30 active:scale-95"
+                                title="Copy Sales Data"
+                            >
+                                {copied ? (
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-emerald-200" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                ) : (
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                )}
+                            </button>
                             <p className="text-xs text-emerald-100">Today's Sales</p>
                             <p className="text-3xl font-bold">{formatINR(calculatedSales)}</p>
                             <div className="mt-2 flex justify-center gap-2 text-xs">
@@ -737,18 +815,26 @@ const DailyEntryPage = () => {
                         <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                             <label className="mb-2 block text-sm font-semibold text-slate-700">Notes (Optional)</label>
                             <textarea
+                                disabled={isViewMode}
                                 value={record.notes || ''}
                                 onChange={(event) => updateField('notes', event.target.value)}
                                 placeholder="Add any notes here..."
-                                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
+                                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 disabled:bg-slate-50"
                                 rows={3}
                             />
                         </div>
 
-                        <button onClick={handleSave} disabled={saving || isViewMode} className="w-full rounded-xl bg-emerald-600 py-2.5 font-semibold text-white disabled:opacity-50">{saving ? 'Saving...' : 'Save Record'}</button>
+                        <button
+                            onClick={handleSave}
+                            disabled={saving || isViewMode}
+                            className="w-full rounded-xl bg-emerald-600 py-2.5 font-semibold text-white disabled:opacity-50"
+                        >
+                            {saving ? 'Saving...' : 'Save Record'}
+                        </button>
                     </div>
-                </fieldset>
+                </div>
             )}
+
 
             {message && (
                 <div className={`rounded-xl px-3 py-2 text-center text-sm font-semibold ${message.includes('Error') ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}`}>
