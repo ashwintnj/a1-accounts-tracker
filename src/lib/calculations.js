@@ -17,7 +17,7 @@ export const calculateDaily = (record) => {
     const receivedEntries = record.moneyReceivedEntries || [];
     const receivedEntriesTotal = sum(receivedEntries.map((entry) => entry.amount));
     const oldAeps = toNumber(record.oldAeps);
-    const totalMoneyReceivedD = receivedEntriesTotal + oldAeps;
+    const totalMoneyReceivedD = receivedEntriesTotal;
 
     // NEW: Grab tally adjustment amount (can be positive or negative)
     const tallyAdjustment = toNumber(record.tallyAdjustment);
@@ -38,7 +38,7 @@ export const calculateDaily = (record) => {
     const moneyBeforeScreenshot = toNumber(record.moneyBeforeScreenshot);
     const extraReceivedF = gpayBusiness + aeps + moneyBeforeScreenshot;
 
-    const dTotal = totalMoneyReceivedD + extraReceivedF - oldAeps;
+    const dTotal = totalMoneyReceivedD + extraReceivedF;
     const debitRealG = moneySentA + totalRechargesE;
     const finalAmount = debitRealG - dTotal;
 
