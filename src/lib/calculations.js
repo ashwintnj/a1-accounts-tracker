@@ -22,7 +22,7 @@ export const calculateDaily = (record) => {
     // NEW: Grab tally adjustment amount (can be positive or negative)
     const tallyAdjustment = toNumber(record.tallyAdjustment);
 
-    const tallyLeft = overallBalanceX + totalMoneyReceivedD;
+    const tallyLeft = overallBalanceX + totalMoneyReceivedD + oldAeps;
 
     // Add adjustment to the left side tally
     const adjustedTallyLeft = tallyLeft + tallyAdjustment;

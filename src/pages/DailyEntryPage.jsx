@@ -609,7 +609,13 @@ const DailyEntryPage = () => {
                                 </div>
                                 <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm">
                                     <div className="flex items-center justify-between gap-2">
-                                        <span>Tally</span>
+                                        <span>Old Aeps Settlement</span>
+                                        <div className="flex items-center gap-1"><span className="font-bold text-amber-700">+</span><strong>{formatINR(computed.oldAeps)}</strong></div>
+                                    </div>
+                                </div>
+                                <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <span>Tally (From bank account)</span>
                                         <div className="flex items-center gap-1"><span className="font-bold text-amber-700">=</span><strong>{formatINR(computed.tallyLeft)}</strong></div>
                                     </div>
                                 </div>
@@ -635,7 +641,7 @@ const DailyEntryPage = () => {
                                 </div>
 
                                 <div className={`rounded-xl p-4 text-center text-white ${computed.tallyMatched ? 'bg-emerald-600' : 'bg-red-600'}`}>
-                                    <p className="text-xs opacity-90">Should equal C (Debited)</p>
+                                    <p className="text-xs opacity-90">Should equal to Money Sended in A1 note (Debited)</p>
                                     <p className="text-2xl font-bold">{formatINR(computed.totalDebitedC)}</p>
                                     {computed.tallyMatched ? <p className="mt-1 text-sm font-semibold">[OK] Tally Matched</p> : <p className="mt-1 text-sm font-semibold">{`[X] Mismatch: ${formatINR(computed.tallyDifference)} 
                                     (${computed.tallyDifference > 0 ? 'Debited extra' : 'Credited extra'})`}</p>}
