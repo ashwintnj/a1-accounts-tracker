@@ -66,8 +66,9 @@ export const listMonthlyRecords = async (userId, month) => {
     const [yearText, monthText] = month.split('-');
     const year = Number(yearText);
     const monthIndex = Number(monthText) - 1;
-    const nextMonthDate = new Date(year, monthIndex + 1, 1);
-    const end = nextMonthDate.toISOString().slice(0, 10);
+    const end = monthIndex === 11
+        ? `${year + 1}-01-01`
+        : `${year}-${String(monthIndex + 2).padStart(2, '0')}-01`;
 
     const q = query(
         getUserDailyColRef(userId),

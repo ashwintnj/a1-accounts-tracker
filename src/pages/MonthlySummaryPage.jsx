@@ -162,7 +162,7 @@ const MonthlySummaryPage = () => {
                             <div className="rounded-lg bg-white p-3">
                                 <p className="text-xs text-slate-500">Avg Daily Sales</p>
                                 <p className="text-xl font-bold text-emerald-600">
-                                    {formatINR(records.length > 0 ? monthlySales / records.length : 0)}
+                                    {formatINR(summaryData.length > 0 ? monthlySales / summaryData.length : 0)}
                                 </p>
                             </div>
                         </div>
