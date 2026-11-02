@@ -9,8 +9,8 @@ export const calculateDaily = (record) => {
     const overallBalanceX = openingTotal - closingTotal;
 
     const moneySentA = toNumber(record.moneySentA);
-    const rechargeAddGr = toNumber(record.rechargeAddGr);
-    const rechargeAddEg = toNumber(record.rechargeAddEg);
+    const rechargeAddGr = sum((record.rechargeAddGrEntries || []).map((entry) => entry.amount));
+    const rechargeAddEg = sum((record.rechargeAddEgEntries || []).map((entry) => entry.amount));
     const totalRechargeAddB = rechargeAddGr + rechargeAddEg;
     const totalDebitedC = moneySentA + totalRechargeAddB;
 
@@ -35,7 +35,7 @@ export const calculateDaily = (record) => {
 
     const gpayBusiness = toNumber(record.gpayBusiness);
     const aeps = toNumber(record.aeps);
-    const moneyBeforeScreenshot = toNumber(record.moneyBeforeScreenshot);
+    const moneyBeforeScreenshot = sum((record.moneyBeforeScreenshotEntries || []).map((entry) => entry.amount));
     const extraReceivedF = gpayBusiness + aeps + moneyBeforeScreenshot;
 
     const dTotal = totalMoneyReceivedD + extraReceivedF;
@@ -56,6 +56,7 @@ export const calculateDaily = (record) => {
         tallyDifference,
         tallyMatched,
         totalRechargesE,
+        moneyBeforeScreenshot,
         extraReceivedF,
         dTotal,
         debitRealG,

@@ -10,18 +10,31 @@ import { formatINR, todayDateString, toNumber } from '../lib/format';
 
 const generateId = () => crypto.randomUUID();
 
+// Migrates legacy single-value fields (rechargeAddGr/Eg, moneyBeforeScreenshot) into entry lists
+const migrateEntryFields = (source) => ({
+    rechargeAddGrEntries: source.rechargeAddGrEntries?.length
+        ? source.rechargeAddGrEntries
+        : [{ id: generateId(), amount: source.rechargeAddGr ?? '' }],
+    rechargeAddEgEntries: source.rechargeAddEgEntries?.length
+        ? source.rechargeAddEgEntries
+        : [{ id: generateId(), amount: source.rechargeAddEg ?? '' }],
+    moneyBeforeScreenshotEntries: source.moneyBeforeScreenshotEntries?.length
+        ? source.moneyBeforeScreenshotEntries
+        : [{ id: generateId(), amount: source.moneyBeforeScreenshot ?? '' }]
+});
+
 const createEmptyRecord = () => ({
     banks: DEFAULT_BANKS.map((bank) => ({ ...bank, id: generateId() })),
     moneySentA: '',
-    rechargeAddGr: '',
-    rechargeAddEg: '',
+    rechargeAddGrEntries: [{ id: generateId(), amount: '' }],
+    rechargeAddEgEntries: [{ id: generateId(), amount: '' }],
     moneyReceivedEntries: [{ id: generateId(), label: DEFAULT_RECEIVED_LABEL, amount: '' }],
     oldAeps: '',
     rechargeDoneGr: '',
     rechargeDoneEg: '',
     gpayBusiness: '',
     aeps: '',
-    moneyBeforeScreenshot: '',
+    moneyBeforeScreenshotEntries: [{ id: generateId(), amount: '' }],
     todayExpense: '',
     todayCashInHand: '',
     previousDayCashInHand: '',
@@ -104,6 +117,7 @@ const DailyEntryPage = () => {
                     moneyReceivedEntries: data.moneyReceivedEntries?.length
                         ? data.moneyReceivedEntries
                         : [{ id: generateId(), label: DEFAULT_RECEIVED_LABEL, amount: '' }],
+                    ...migrateEntryFields(data),
                     previousDayCashInHand: data.previousDayCashInHand || lastCashInHand || ''
                 });
                 setIsEditing(true);
@@ -116,6 +130,7 @@ const DailyEntryPage = () => {
                         const parsed = JSON.parse(savedDraft);
                         setRecord({
                             ...parsed,
+                            ...migrateEntryFields(parsed),
                             previousDayCashInHand: parsed.previousDayCashInHand || lastCashInHand || ''
                         });
                         if (savedStep) setCurrentStep(Number(savedStep));
@@ -208,8 +223,7 @@ const DailyEntryPage = () => {
     const rechargeEgB2 = toNumber(record.rechargeDoneEg);
     const gpayBusinessAmount = toNumber(record.gpayBusiness);
     const aepsAmount = toNumber(record.aeps);
-    const step7GpayBusinessAndAeps = gpayBusinessAmount + aepsAmount;
-    const tab7Total = step7GpayBusinessAndAeps + toNumber(record.moneyBeforeScreenshot);
+    const tab7Total = computed.extraReceivedF;
 
     const handleCopySales = async (e) => {
         if (e) {
@@ -300,6 +314,28 @@ const DailyEntryPage = () => {
         setRecord((prev) => ({
             ...prev,
             moneyReceivedEntries: prev.moneyReceivedEntries.filter((entry) => entry.id !== id)
+        }));
+    };
+
+    // Generic helpers for amount-only entry lists (recharge add wallets, money before screenshot)
+    const addEntryTo = (field) => {
+        setRecord((prev) => ({
+            ...prev,
+            [field]: [...prev[field], { id: generateId(), amount: '' }]
+        }));
+    };
+
+    const updateEntryIn = (field, id, value) => {
+        setRecord((prev) => ({
+            ...prev,
+            [field]: prev[field].map((entry) => (entry.id === id ? { ...entry, amount: value } : entry))
+        }));
+    };
+
+    const removeEntryFrom = (field, id) => {
+        setRecord((prev) => ({
+            ...prev,
+            [field]: prev[field].filter((entry) => entry.id !== id)
         }));
     };
 
@@ -544,11 +580,35 @@ const DailyEntryPage = () => {
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="rounded-xl border border-red-100 bg-red-50/60 p-3">
                                         <label className="mb-2 block text-xs font-semibold text-red-700">GR Wallet Add</label>
-                                        <NumberInput value={record.rechargeAddGr} onChange={(value) => updateField('rechargeAddGr', value)} placeholder="0" />
+                                        <div className="space-y-2">
+                                            {record.rechargeAddGrEntries.map((entry) => (
+                                                <div key={entry.id} className="flex items-center gap-1">
+                                                    <NumberInput value={entry.amount} onChange={(value) => updateEntryIn('rechargeAddGrEntries', entry.id, value)} placeholder="0" />
+                                                    {record.rechargeAddGrEntries.length > 1 && (
+                                                        <button onClick={() => removeEntryFrom('rechargeAddGrEntries', entry.id)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-100 text-red-700 hover:bg-red-200" title="Delete">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <button onClick={() => addEntryTo('rechargeAddGrEntries')} className="mt-2 w-full rounded-lg border border-dashed border-red-300 bg-red-50 py-1.5 text-xs font-semibold text-red-700">+ Add Entry</button>
                                     </div>
                                     <div className="rounded-xl border border-red-100 bg-red-50/60 p-3">
                                         <label className="mb-2 block text-xs font-semibold text-red-700">EG Wallet Add</label>
-                                        <NumberInput value={record.rechargeAddEg} onChange={(value) => updateField('rechargeAddEg', value)} placeholder="0" />
+                                        <div className="space-y-2">
+                                            {record.rechargeAddEgEntries.map((entry) => (
+                                                <div key={entry.id} className="flex items-center gap-1">
+                                                    <NumberInput value={entry.amount} onChange={(value) => updateEntryIn('rechargeAddEgEntries', entry.id, value)} placeholder="0" />
+                                                    {record.rechargeAddEgEntries.length > 1 && (
+                                                        <button onClick={() => removeEntryFrom('rechargeAddEgEntries', entry.id)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-100 text-red-700 hover:bg-red-200" title="Delete">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <button onClick={() => addEntryTo('rechargeAddEgEntries')} className="mt-2 w-full rounded-lg border border-dashed border-red-300 bg-red-50 py-1.5 text-xs font-semibold text-red-700">+ Add Entry</button>
                                     </div>
                                 </div>
                                 <div className="rounded-xl bg-red-600 p-3 text-center text-white">
@@ -679,7 +739,19 @@ const DailyEntryPage = () => {
                                 </div>
                                 <div className="rounded-xl border border-teal-100 bg-teal-50/60 p-3">
                                     <label className="mb-2 block text-sm font-semibold text-teal-700">Money Before Screenshot</label>
-                                    <NumberInput value={record.moneyBeforeScreenshot} onChange={(value) => updateField('moneyBeforeScreenshot', value)} placeholder="0" />
+                                    <div className="space-y-2">
+                                        {record.moneyBeforeScreenshotEntries.map((entry) => (
+                                            <div key={entry.id} className="flex items-center gap-2">
+                                                <NumberInput value={entry.amount} onChange={(value) => updateEntryIn('moneyBeforeScreenshotEntries', entry.id, value)} placeholder="0" />
+                                                {record.moneyBeforeScreenshotEntries.length > 1 && (
+                                                    <button onClick={() => removeEntryFrom('moneyBeforeScreenshotEntries', entry.id)} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-red-100 text-red-700 hover:bg-red-200" title="Delete">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <button onClick={() => addEntryTo('moneyBeforeScreenshotEntries')} className="mt-2 w-full rounded-lg border border-dashed border-teal-300 bg-teal-50 py-2 text-xs font-semibold text-teal-700">+ Add Entry</button>
                                 </div>
                                 <div className="rounded-xl bg-teal-600 p-3 text-center text-white">
                                     <p className="text-xs text-teal-100">Total (GPay Business + AEPS + Money Before Screenshot)</p>
@@ -731,7 +803,7 @@ const DailyEntryPage = () => {
                                             </div>
                                             <div className="flex items-center justify-between py-0.5">
                                                 <p>Money before Screenshot</p>
-                                                <p className="font-semibold text-slate-700">{formatINR(record.moneyBeforeScreenshot)}</p>
+                                                <p className="font-semibold text-slate-700">{formatINR(computed.moneyBeforeScreenshot)}</p>
                                             </div>
                                         </div>
                                     </div>
